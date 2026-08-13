@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0f">
+<title>Mike Command Center</title>
+<style>
+:root{--bg:#08090d;--card:#11131a;--card2:#171923;--text:#f4f4f5;--muted:#9699a6;--line:#262936;--accent:#7c5cff;--green:#35d07f;--red:#ff5c70;--gold:#f5c451}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",Inter,Arial,sans-serif}
+.app{max-width:760px;margin:auto;padding:18px 16px 100px}
+header{padding:18px 4px 10px}h1{font-size:30px;margin:0 0 5px}h2{font-size:22px;margin:8px 0 14px}h3{margin:0 0 8px;font-size:16px}.sub{color:var(--muted);font-size:14px}
+.tabs{position:fixed;bottom:0;left:0;right:0;background:rgba(8,9,13,.94);backdrop-filter:blur(18px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:5}
+.tabs button{background:none;border:0;color:var(--muted);padding:10px 9px 12px;font-size:11px;min-width:62px}.tabs button.active{color:#fff}.icon{display:block;font-size:19px;margin-bottom:3px}
+.page{display:none}.page.active{display:block}
+.card{background:linear-gradient(145deg,var(--card),#0e1016);border:1px solid var(--line);border-radius:18px;padding:16px;margin:10px 0;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{background:var(--card2);border:1px solid var(--line);border-radius:15px;padding:14px}.value{font-size:24px;font-weight:750}.label{font-size:12px;color:var(--muted);margin-top:4px}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.pill{font-size:11px;border:1px solid var(--line);padding:6px 9px;border-radius:99px;color:var(--muted)}
+button.primary,.btn{border:0;border-radius:12px;background:var(--accent);color:#fff;padding:11px 14px;font-weight:650;cursor:pointer}.btn.secondary{background:var(--card2);border:1px solid var(--line)}
+input,select,textarea{width:100%;background:#0b0d12;color:#fff;border:1px solid var(--line);border-radius:11px;padding:11px;margin:5px 0 9px;font:inherit}textarea{min-height:90px;resize:vertical}
+label{font-size:12px;color:var(--muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}
+.item{padding:12px 0;border-bottom:1px solid var(--line)}.item:last-child{border:0}.check{display:flex;gap:10px;align-items:center}.check input{width:20px;height:20px;margin:0;accent-color:var(--accent)}
+.tag{display:inline-block;padding:5px 8px;border-radius:8px;background:#1d1b31;color:#c8bfff;font-size:11px;margin:2px}.positive{color:var(--green)}.negative{color:var(--red)}.gold{color:var(--gold)}
+.small{font-size:12px;color:var(--muted);line-height:1.45}.empty{text-align:center;color:var(--muted);padding:18px}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <div class="sub" id="date"></div>
+  <h1>Mike Command Center</h1>
+  <div class="sub">Trade smarter. Train consistently. Build the life.</div>
+</header>
+
+<section id="dashboard" class="page active">
+  <div class="card">
+    <div class="row"><div><h3>Today's Mission</h3><div class="small">Protect consistency before chasing results.</div></div><span class="pill" id="streakPill">0 day streak</span></div>
+    <div id="dashChecks"></div>
+  </div>
+  <div class="grid">
+    <div class="stat"><div class="label">Trades logged</div><div class="value" id="tradeCount">0</div></div>
+    <div class="stat"><div class="label">Win rate</div><div class="value" id="winRate">—</div></div>
+    <div class="stat"><div class="label">Monthly spending</div><div class="value" id="spendTotal">$0</div></div>
+    <div class="stat"><div class="label">Goals completed</div><div class="value" id="goalPct">0%</div></div>
+  </div>
+  <div class="card"><h3>Focus</h3><div class="actions">
+    <button class="btn" onclick="showPage('trading')">Log a Trade</button>
+    <button class="btn secondary" onclick="showPage('routine')">Run Routine</button>
+    <button class="btn secondary" onclick="showPage('goals')">View Goals</button>
+  </div></div>
+</section>
+
+<section id="trading" class="page">
+  <h2>Trading Journal</h2>
+  <div class="card">
+    <label>Market</label><select id="market"><option>ES</option><option>MES</option><option>NQ</option><option>MNQ</option><option>Other</option></select>
+    <label>Direction</label><select id="direction"><option>Long</option><option>Short</option></select>
+    <label>Result</label><select id="result"><option>Win</option><option>Loss</option><option>Break-even</option></select>
+    <label>P/L ($)</label><input id="pnl" type="number" step="0.01" placeholder="0">
+    <label>Setup / reason for entry</label><textarea id="setup" placeholder="Liquidity, FVG, previous session high/low, structure..."></textarea>
+    <label>What did I do well?</label><textarea id="good"></textarea>
+    <label>What would I change?</label><textarea id="bad"></textarea>
+    <button class="primary" onclick="addTrade()">Save Trade</button>
+  </div>
+  <div class="card"><div class="row"><h3>Recent Trades</h3><span class="pill" id="tradeSummary">0 trades</span></div><div id="trades"></div></div>
+</section>
+
+<section id="routine" class="page">
+  <h2>Daily Operating System</h2>
+  <div class="card">
+    <div class="small">Use this as your baseline. Adjust around your work schedule rather than forcing perfection.</div>
+    <div id="routineList"></div>
+  </div>
+  <div class="card"><h3>Market Structure Checklist</h3>
+    <div class="check"><input type="checkbox"><span>Previous session high marked</span></div>
+    <div class="check"><input type="checkbox"><span>Previous session low marked</span></div>
+    <div class="check"><input type="checkbox"><span>15-minute structure identified</span></div>
+    <div class="check"><input type="checkbox"><span>Liquidity targets identified</span></div>
+    <div class="check"><input type="checkbox"><span>Entry model defined before execution</span></div>
+  </div>
+</section>
+
+<section id="goals" class="page">
+  <h2>Goals</h2>
+  <div class="card">
+    <div class="item"><span class="tag">TRADING</span><b>Build consistent trading income</b><div class="small">Prioritize process, risk control, journaling and repeatable execution.</div></div>
+    <div class="item"><span class="tag">FITNESS</span><b>Build strength & physique</b><div class="small">Keep gym consistency high and track progress.</div></div>
+    <div class="item"><span class="tag">BUSINESS</span><b>Build NOCTRA</b><div class="small">Turn the clothing brand into a real, repeatable business.</div></div>
+    <div class="item"><span class="tag">TECH</span><b>Build useful AI systems</b><div class="small">Keep developing tools that reduce repetitive work.</div></div>
+  </div>
+  <div class="card"><h3>Custom Goal</h3><input id="goalInput" placeholder="e.g. Complete 20 perfect trading journals"><button class="primary" onclick="addGoal()">Add Goal</button><div id="goalList"></div></div>
+</section>
+
+<section id="money" class="page">
+  <h2>Money Hub</h2>
+  <div class="card">
+    <h3>Add Spending</h3>
+    <label>Category</label><select id="spendCat"><option>Food</option><option>Entertainment</option><option>Trading</option><option>Gaming/Tech</option><option>Clothing/NOCTRA</option><option>Bills</option><option>Other</option></select>
+    <label>Amount ($)</label><input id="spendAmt" type="number" step="0.01"><button class="primary" onclick="addSpend()">Add Expense</button>
+  </div>
+  <div class="grid"><div class="stat"><div class="label">This month</div><div class="value" id="moneyTotal">$0</div></div><div class="stat"><div class="label">Transactions</div><div class="value" id="moneyCount">0</div></div></div>
+  <div class="card"><div id="spending"></div></div>
+</section>
+
+<section id="noctra" class="page">
+  <h2>NOCTRA Lab</h2>
+  <div class="card">
+    <span class="tag">COLLECTION 01</span>
+    <h3>Build the brand one move at a time.</h3>
+    <div class="check"><input type="checkbox" id="n1"><span>Review product direction</span></div>
+    <div class="check"><input type="checkbox" id="n2"><span>Improve one product/detail</span></div>
+    <div class="check"><input type="checkbox" id="n3"><span>Create one piece of content</span></div>
+    <div class="check"><input type="checkbox" id="n4"><span>Research one supplier/production step</span></div>
+  </div>
+  <div class="card"><h3>Idea Vault</h3><textarea id="idea" placeholder="Drop product, content, website or marketing ideas here..."></textarea><button class="primary" onclick="saveIdea()">Save Idea</button><div id="ideas"></div></div>
+</section>
+
+<nav class="tabs">
+<button class="active" onclick="showPage('dashboard',this)"><span class="icon">⌂</span>Home</button>
+<button onclick="showPage('trading',this)"><span class="icon">◈</span>Trading</button>
+<button onclick="showPage('routine',this)"><span class="icon">✓</span>Routine</button>
+<button onclick="showPage('goals',this)"><span class="icon">◎</span>Goals</button>
+<button onclick="showPage('money',this)"><span class="icon">$</span>Money</button>
+<button onclick="showPage('noctra',this)"><span class="icon">✦</span>NOCTRA</button>
+</nav>
+</div>
+
+<script>
+const KEY='mikeCommandCenter_v1';
+let db=JSON.parse(localStorage.getItem(KEY)||'{"trades":[],"spends":[],"goals":[],"ideas":[],"checks":{}}');
+function save(){localStorage.setItem(KEY,JSON.stringify(db));render()}
+function showPage(id,btn){
+ document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
+ document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));
+ if(btn)btn.classList.add('active'); else [...document.querySelectorAll('.tabs button')].find(x=>x.textContent.includes(id==='dashboard'?'Home':id[0].toUpperCase()+id.slice(1)))?.classList.add('active');
+ window.scrollTo(0,0);
+}
+function addTrade(){
+ const t={date:new Date().toLocaleString(),market:market.value,direction:direction.value,result:result.value,pnl:Number(pnl.value||0),setup:setup.value,good:good.value,bad:bad.value};
+ db.trades.unshift(t); pnl.value='';setup.value='';good.value='';bad.value='';save();
+}
+function addSpend(){const a=Number(spendAmt.value||0);if(!a)return;db.spends.unshift({date:new Date().toLocaleDateString(),cat:spendCat.value,amt:a});spendAmt.value='';save()}
+function addGoal(){if(!goalInput.value.trim())return;db.goals.push({text:goalInput.value.trim(),done:false});goalInput.value='';save()}
+function toggleGoal(i){db.goals[i].done=!db.goals[i].done;save()}
+function saveIdea(){if(!idea.value.trim())return;db.ideas.unshift({date:new Date().toLocaleDateString(),text:idea.value.trim()});idea.value='';save()}
+function render(){
+ date.textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+ tradeCount.textContent=db.trades.length;
+ tradeSummary.textContent=db.trades.length+' trades';
+ const decided=db.trades.filter(t=>t.result!=='Break-even'); winRate.textContent=decided.length?Math.round(decided.filter(t=>t.result==='Win').length/decided.length*100)+'%':'—';
+ const total=db.spends.reduce((s,x)=>s+x.amt,0); moneyTotal.textContent=spendTotal.textContent='$'+total.toFixed(2); moneyCount.textContent=db.spends.length;
+ const gp=db.goals.length?Math.round(db.goals.filter(x=>x.done).length/db.goals.length*100):0;goalPct.textContent=gp+'%';
+ trades.innerHTML=db.trades.length?db.trades.slice(0,10).map(t=>`<div class="item"><div class="row"><b>${t.market} · ${t.direction}</b><span class="${t.result==='Win'?'positive':t.result==='Loss'?'negative':''}">${t.result} ${t.pnl>=0?'+':''}$${t.pnl.toFixed(2)}</span></div><div class="small">${t.date} · ${t.setup||'No setup note'}</div></div>`).join(''):'<div class="empty">No trades yet. Log your first trade.</div>';
+ spending.innerHTML=db.spends.length?db.spends.slice(0,15).map(x=>`<div class="item"><div class="row"><b>${x.cat}</b><span>$${x.amt.toFixed(2)}</span></div><div class="small">${x.date}</div></div>`).join(''):'<div class="empty">No spending logged.</div>';
+ goalList.innerHTML=db.goals.map((g,i)=>`<div class="item check"><input type="checkbox" ${g.done?'checked':''} onchange="toggleGoal(${i})"><span class="${g.done?'positive':''}">${g.text}</span></div>`).join('');
+ ideas.innerHTML=db.ideas.map(x=>`<div class="item"><b>${x.text}</b><div class="small">${x.date}</div></div>`).join('');
+ routineList.innerHTML=['Plan the day before opening charts','Mark 15-minute previous-session highs/lows','Define your A+ setup and invalidation','Execute only planned trades','Journal the session','Train / move your body','Review one thing to improve tomorrow'].map((x,i)=>`<div class="item check"><input type="checkbox" onchange="db.checks['r${i}']=this.checked;save()" ${db.checks['r'+i]?'checked':''}><span>${x}</span></div>`).join('');
+ dashChecks.innerHTML=['Trading plan reviewed','Workout completed','Journal updated','One business/NOCTRA action'].map((x,i)=>`<div class="item check"><input type="checkbox" onchange="db.checks['d${i}']=this.checked;save()" ${db.checks['d'+i]?'checked':''}><span>${x}</span></div>`).join('');
+ streakPill.textContent=Object.values(db.checks).filter(Boolean).length+' wins today';
+}
+render();
+</script>
+</body>
+</html>
